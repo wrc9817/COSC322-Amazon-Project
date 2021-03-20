@@ -1,14 +1,15 @@
-
 package ubc.cosc322;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 import sfs2x.client.entities.Room;
 import ygraph.ai.smartfox.games.BaseGameGUI;
 import ygraph.ai.smartfox.games.GameClient;
+import ygraph.ai.smartfox.games.GameMessage;
 import ygraph.ai.smartfox.games.GamePlayer;
+import ygraph.ai.smartfox.games.amazons.AmazonsGameMessage;
+import ygraph.ai.smartfox.games.amazons.HumanPlayer;
 
 /**
  * An example illustrating how to implement a GamePlayer
@@ -30,7 +31,8 @@ public class COSC322Test extends GamePlayer{
      * @param args for name and passwd (current, any string would work)
      */
     public static void main(String[] args) {				 
-    	COSC322Test player = new COSC322Test("args[0]", "args[1]");
+    	//COSC322Test player = new COSC322Test(args[0], args[1]);
+    	HumanPlayer player = new HumanPlayer();
     	
     	if(player.getGameGUI() == null) {
     		player.Go();
@@ -53,33 +55,60 @@ public class COSC322Test extends GamePlayer{
     public COSC322Test(String userName, String passwd) {
     	this.userName = userName;
     	this.passwd = passwd;
-    	this.gamegui = new BaseGameGUI(this);
+    	
     	//To make a GUI-based player, create an instance of BaseGameGUI
     	//and implement the method getGameGUI() accordingly
+    	this.gamegui = new BaseGameGUI(this);
+    	
     }
  
 
 
     @Override
     public void onLogin() {
-    	userName = gameClient.getUserName();
-			if(gamegui != null) { gamegui.setRoomInformation(gameClient.getRoomList()); }
+    	System.out.println("Congratualations!!! "
+    			+ "I am called because the server indicated that the login is successfully");
+    	System.out.println("The next step is to find a room and join it: "
+    			+ "the gameClient instance created in my constructor knows how!"); 
+    	/*
+    	 *  Warm-up Demo 1 
+    	List<Room> roomlist = this.gameClient.getRoomList();
+    	System.out.println(roomlist);
+    	
+    	this.gameClient.joinRoom(roomlist.get(0).getName());
+    	System.out.println("Joined room " + roomlist.get(0).getName() + "\n");
+    	*/
+    	
+    	this.userName = this.gameClient.getUserName();
+    	if(this.gamegui != null) {
+    		this.gamegui.setRoomInformation(this.gameClient.getRoomList());
+    	}
+
     }
 
-    @Override
+    @SuppressWarnings("unchecked")
+	@Override
     public boolean handleGameMessage(String messageType, Map<String, Object> msgDetails) {
     	//This method will be called by the GameClient when it receives a game-related message
     	//from the server.
-			if(messageType.equals("cosc322.game-state.board")){
-				ArrayList<Integer> al	= (ArrayList<Integer>) msgDetails.get("game-state");		
-				this.gamegui.setGameState(al);
-			}
-			if(messageType.equals("cosc322.game-action.move")){
-				this.gamegui.updateGameState(msgDetails);
-			}
+	
     	//For a detailed description of the message types and format, 
     	//see the method GamePlayer.handleGameMessage() in the game-client-api document. 
-    	System.out.println(messageType+": "+msgDetails);
+    	
+    	/*
+    	 * Warm-up Demo 1 
+    	System.out.println("Received msg type:" + messageType);
+    	System.out.println("Received msg:" + msgDetails);
+    	*/
+    	
+    	//GameMessage.GAME_STATE_BOARD
+    	if (messageType == GameMessage.GAME_STATE_BOARD) {
+    		this.gamegui.setGameState((ArrayList<Integer>) msgDetails.get(AmazonsGameMessage.GAME_STATE));
+    	}else if (messageType == GameMessage.GAME_ACTION_MOVE){
+    	//GameMessage.GAME_ACTION_MOVE
+    		this.gamegui.updateGameState(msgDetails);
+    	}
+    	
     	return true;   	
     }
     
